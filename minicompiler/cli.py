@@ -1,6 +1,7 @@
 """Command-line entry point."""
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -15,7 +16,42 @@ def main(argv=None):
     importer.add_argument("--model", required=True, type=Path, help="input ONNX model")
     importer.add_argument("--output-dir", required=True, type=Path, help="directory for summary and IR dumps")
     importer.add_argument("--keep-params-in-input", action="store_true", help="retain weights as Relax function parameters")
+    bench = subparsers.add_parser("bench", help="compare a TVM CPU baseline with ONNX Runtime")
+    bench.add_argument("--model", type=Path, required=True)
+    bench.add_argument("--target", choices=["llvm"], default="llvm")
+    bench.add_argument("--mode", choices=["default", "nofusion"], default="default")
+    bench.add_argument("--threads", type=int, default=1)
+    bench.add_argument("--seed", type=int, default=0)
+    bench.add_argument("--warmup", type=int, default=30)
+    bench.add_argument("--repeat", type=int, default=100)
+    bench.add_argument("--rounds", type=int, default=3)
+    bench.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
+    if args.command == "bench":
+        if args.threads < 1 or args.seed < 0 or args.warmup < 0 or args.repeat < 1 or args.rounds < 1:
+            parser.error("threads, repeat and rounds must be positive; seed and warmup must be nonnegative")
+        # Set thread limits before importing TVM, ORT or NumPy in this process.
+        os.environ["TVM_NUM_THREADS"] = str(args.threads)
+        os.environ["OMP_NUM_THREADS"] = str(args.threads)
+        os.environ["OPENBLAS_NUM_THREADS"] = str(args.threads)
+        from .profiling.report import run_benchmark
+        try:
+            if args.output and args.output.exists():
+                raise FileExistsError(f"output already exists: {args.output}; choose a new path")
+            report = run_benchmark(args.model, target=args.target, mode=args.mode,
+                                   threads=args.threads, seed=args.seed, warmup=args.warmup,
+                                   repeat=args.repeat, rounds=args.rounds)
+            text = json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text, encoding="utf-8")
+                print(f"Benchmark report written to {args.output}")
+            else:
+                print(text, end="")
+            return 0 if report["correctness"]["passed"] else 1
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(f"Benchmark failed: {exc}", file=sys.stderr)
+            return 1
     if args.command == "doctor":
         report = collect_report()
         print(json.dumps(report, ensure_ascii=False, indent=2))

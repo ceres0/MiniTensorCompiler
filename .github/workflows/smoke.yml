@@ -3,6 +3,10 @@ on: [push, pull_request]
 jobs:
   linux-cpu:
     runs-on: ubuntu-24.04
+    env:
+      TVM_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
