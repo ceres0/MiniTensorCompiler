@@ -9,6 +9,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: uv sync --frozen --extra dev
+      - run: uv sync --frozen --extra dev --extra models
       - run: uv run --locked python -m minicompiler doctor
-      - run: uv run --locked pytest tests/smoke
+      - run: uv run --locked pytest tests
