@@ -1,0 +1,14 @@
+name: smoke
+on: [push, pull_request]
+jobs:
+  linux-cpu:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: uv sync --frozen --extra dev
+      - run: uv run --locked python -m minicompiler doctor
+      - run: uv run --locked pytest tests/smoke
