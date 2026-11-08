@@ -1,6 +1,6 @@
 # MiniTensorCompiler
 
-基于 Apache TVM Relax / TensorIR 的模型编译实验项目。当前完成静态 ONNX 模型的检查、Relax 导入、LLVM CPU 编译和 VM 执行，并与 ONNX Runtime 对照。Relax、ONNX frontend、LLVM codegen 和 VM 来自 TVM；自定义图优化与调度尚未完成。
+基于 Apache TVM Relax / TensorIR 的模型编译实验项目。当前完成静态 ONNX 模型的检查、Relax 导入、LLVM CPU 编译和 VM 执行，与 ONNX Runtime 对照，并实现受语义保护的冗余 reshape 链归并。Relax、ONNX frontend、LLVM codegen 和 VM 来自 TVM；自定义算子调度尚未完成。
 
 ## 环境和运行
 
@@ -47,6 +47,16 @@ uv run --locked python -m minicompiler bench --model runs/models/mlp.onnx --targ
 默认固定 seed 0，预热 30 次，再测量 3 轮各 100 次；可通过 `--seed`、`--warmup`、`--repeat`、`--rounds` 调整。每份 JSON 同时包含 ORT CPU 与所选 TVM 模式、每次延迟、median/p95、误差、环境与编译耗时。只有正确性通过才测延迟，失败时命令返回非零并保留错误指标；已有输出文件不会被覆盖。运行方式、计时边界与公平性限制见 [benchmark 方法](docs/benchmark_methodology.md)。
 
 固定版本的 TVM CPU 默认 pipeline 本身不含 `FuseOps`/`FuseTIR`；`nofusion` 显式禁用它们，仅用于诊断，可能与默认路径相同，不代表优化收益。ORT 与 TVM 是不同系统，其延迟差异也不是项目自定义优化收益。
+
+## 冗余 reshape Pass
+
+```bash
+uv run --locked python examples/02_relax_pass.py --output-dir runs/reshape-demo
+uv run --locked python -m minicompiler reshape --model runs/models/mlp.onnx --output-dir runs/mlp/reshape
+uv run --locked python -m minicompiler reshape --model runs/models/mlp.onnx --output-dir runs/mlp/reshape-disabled --disable
+```
+
+示例展示两层 reshape 合并，并编译执行前后版本验证数值。CLI 对输入 ONNX 模型分别输出改写前后 IR 和含命中、跳过原因的 JSON；普通 MLP 未必包含匹配模式。该 Pass 对未知、动态或零长度形状保守跳过；更多前提和回归用例见 [Pass 正确性说明](docs/pass_correctness.md)。TVM 自带类似 Pass，此处不宣称性能提升。
 
 ## 参考资料
 

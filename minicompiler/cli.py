@@ -16,6 +16,10 @@ def main(argv=None):
     importer.add_argument("--model", required=True, type=Path, help="input ONNX model")
     importer.add_argument("--output-dir", required=True, type=Path, help="directory for summary and IR dumps")
     importer.add_argument("--keep-params-in-input", action="store_true", help="retain weights as Relax function parameters")
+    reshape = subparsers.add_parser("reshape", help="run the redundant reshape pass on an ONNX model")
+    reshape.add_argument("--model", required=True, type=Path)
+    reshape.add_argument("--output-dir", required=True, type=Path)
+    reshape.add_argument("--disable", action="store_true", help="dump unchanged IR for comparison")
     bench = subparsers.add_parser("bench", help="compare a TVM CPU baseline with ONNX Runtime")
     bench.add_argument("--model", type=Path, required=True)
     bench.add_argument("--target", choices=["llvm"], default="llvm")
@@ -27,6 +31,29 @@ def main(argv=None):
     bench.add_argument("--rounds", type=int, default=3)
     bench.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
+    if args.command == "reshape":
+        from .frontend.onnx_loader import OnnxImportError, import_relax, load_and_summarize
+        from .passes.redundant_reshape import run_redundant_reshape
+        try:
+            names = ("00_relax_before.py", "01_relax_after.py", "02_reshape_report.json")
+            if any((args.output_dir / name).exists() for name in names):
+                raise FileExistsError(f"output files already exist in {args.output_dir}; choose a new directory")
+            model, _ = load_and_summarize(args.model)
+            before = import_relax(model, keep_params_in_input=False)
+            after, report = run_redundant_reshape(before, enabled=not args.disable)
+            before_text, after_text = before.script(), after.script()
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            (args.output_dir / names[0]).write_text(before_text + "\n", encoding="utf-8")
+            (args.output_dir / names[1]).write_text(after_text + "\n", encoding="utf-8")
+            (args.output_dir / names[2]).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        except (OnnxImportError, ValueError, RuntimeError, OSError) as exc:
+            print(f"Reshape pass failed: {exc}", file=sys.stderr)
+            return 1
+        print(f"Reshape pass report and IR written to {args.output_dir}")
+        if report.get("status") == "failed":
+            print(f"Reshape pass rolled back: {report.get('error')}", file=sys.stderr)
+            return 1
+        return 0
     if args.command == "bench":
         if args.threads < 1 or args.seed < 0 or args.warmup < 0 or args.repeat < 1 or args.rounds < 1:
             parser.error("threads, repeat and rounds must be positive; seed and warmup must be nonnegative")
