@@ -95,6 +95,8 @@ uv run --locked python -m benchmarks.run_suite --output-dir runs/repro-suite --t
 
 该命令依次生成固定种子的 MLP、CNN，采集 ORT/TVM 对照与 NoFusion 诊断，并运行一个 MatMul 调度消融；结果、参数和日志保存在指定的新目录。各报告中的 Pass 时间由实际编译时的 PassInstrument 采集；嵌套的 inclusive 时间不能直接相加，运行时 kernel 数尚未测量。详见 [架构](docs/architecture.md)、[实验记录](docs/experiments.md) 和 [benchmark 方法](docs/benchmark_methodology.md)。
 
+后续 Linux CPU、融合、QKV 和 RTX 3090 深挖的代码、原始样本、失败案例和简历可引用范围见 [简历证据集](docs/resume_evidence.md)。
+
 ## NVIDIA GPU Docker
 
 GPU 镜像需要 Linux x86_64 NVIDIA GPU 主机、兼容 CUDA 13 的 NVIDIA 驱动以及已配置 Docker 的 NVIDIA Container Toolkit。构建并验证 GPU：

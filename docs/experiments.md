@@ -53,4 +53,4 @@ ORT 是不同系统且返回 NumPy 数组；它与 TVM 结果差异不是本项�
 
 `runs/stage7/evidence/manifest.json` 对应 commit `c52ca75`：MLP 的两个 MatMul 分别以 `(1,128,256)` 和 `(1,256,64)` 接入手写 vectorize schedule，实际编译产物提供 LLVM IR、汇编和 VM 文本。证据导出与工件导出是独立编译；检查用 LegalizeOps IR 不重新送入正式编译 pipeline。重新加载的 266360 字节工件与 ORT 的该次输出最大绝对误差为 0（`runs/stage7/verification.json`）。完整命令及可信原生库、跨机限制见 [IR 证据链](ir_walkthrough.md)。
 
-这些运行均未验证 Linux x86_64 参考机器或 CUDA。项目仍需在目标环境固定 CPU 核/线程、电源与负载后重复多轮，才能讨论稳健的性能差异。
+以上历史运行本身未覆盖 Linux x86_64 或 CUDA；后续在 RTX 3090 验证了 CUDA 基础运行，且新增 [Linux CPU/GPU 深挖证据](../results/deep-dive-2026-11-09/README.md)。这些新的运行仍未独占服务器、控制电源或采集硬件计数，不能视为稳定性能结论。

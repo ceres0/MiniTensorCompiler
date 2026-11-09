@@ -16,7 +16,9 @@
 | NVIDIA GPU 基础执行 | [Dockerfile](../Dockerfile)、[CUDA Add](../examples/cuda_add.py)、[CUDA MLP](../examples/cuda_mlp.py)、[验证记录](docker_gpu.md) | RTX 3090 的 Linux x86_64 容器中验证 Add 和 MLP 的实际 CUDA 执行及数值；不是 GPU 性能基准，也不是自定义 GPU MatMul Schedule 的证明。 |
 | 测试与可复现 | [一键 suite](../benchmarks/run_suite.py)、[Pass 计时](../minicompiler/profiling/pass_timing.py)、[参考 JSON](../results/reference/README.md) | 固定 seed、正确性优先、原始延迟样本和版本；静态 PrimFunc 快照与运行时 kernel 调用数严格区分。 |
 
-## 已有实测：如何引用
+## 历史实测：如何引用
+
+本节保留早期运行的口径；其后新增的 Linux CPU、QKV 和 GPU MatMul 证据见下方“深挖实验登记”，不要将早期缺口误认为当前状态。
 
 - **可引用的正确性指标**：`results/reference/mlp.json` 和 `cnn.json` 保存实际 ORT 对照、误差、CPU/版本与样本；其代码 commit 为 `bfe7a2c`，数据来自 Apple M2，单线程。数值只代表该模型、输入和环境，不是全模型支持声明。
 - **CUDA 正确性记录**：[GPU Docker 文档](docker_gpu.md)记录 RTX 3090、驱动 580.105.08、CUDA Add 与 MLP、容器内测试和 MLP 与 ORT 的误差；该记录是功能验证，没有 GPU 性能数据。完整 PyTorch 镜像以及其他 GPU/驱动未验证。
@@ -37,14 +39,16 @@
 
 ## 深挖实验登记
 
-下面条目是工作项，不是已完成结论。只有验收通过并提交对应代码、原始结果与执行条件后，才可更新简历指标。
+本轮深挖原始数据、IR、汇编、失败样例与重跑条件已保存到 [Linux/RTX 3090 证据集](../results/deep-dive-2026-11-09/README.md)。数据来自共享服务器，CPU 绑定并非独占，电源与后台负载未控制；单轮结果不作为稳定收益承诺。
 
 | 方向 | 待补证据 | 状态 |
 |---|---|---|
-| Linux CPU 调度 | 固定 CPU 集合与线程、交错多轮、同输入；至少 6 个 shape 的 raw samples、IR、目标/库版本及负例；若声明 SIMD/cache 原因须有汇编或硬件计数 | 待独立受控验证 |
-| 线性融合 | 能验证 bias/relu 与 MatMul 最终写回关系的 TIR；与独立 kernel、现有融合和 TVM Default 的相同条件数值/性能对照 | 待验证 |
-| QKV 成本判断 | 明确预拼接时间、slice、峰值内存口径；多 shape、消费者和动态权重反例；将选择规则与测得数据绑定 | 待验证 |
-| GPU MatMul | 显式线程绑定与 GPU 专用调度、同步计时、TVM Default 对照及不同 shape/尾部；有 profiler 方可声明 launch、带宽或占用率 | 待验证 |
+| Linux CPU 调度 | 两核绑定、六 shape 随机交错样本、FP32/FP64 参考、TIR 和实际汇编；首次严格容差失败保留 | 完成一轮；需独占负载、更多进程复测和硬件计数 |
+| 线性融合 | 手写标量归约后 bias/relu 写回，三个 shape 与 TVM Default、graph-fused 比较；源 TIR 无完整中间张量 | 已验证数值；本次未比 graph-fused 更快，尚未测实际访存 |
+| QKV 成本判断 | 六形状交错成本、拼接与 slice 诊断；候选形状换 seed 独立复测不通过 | 已有负例；无自动成本模型或峰值内存测量 |
+| GPU MatMul | RTX 3090 四 shape 与 TVM Default 的同步 VM 对照、失败及修复记录 | 基础输出映射已验证；无 shared memory 或 profiler |
+
+该轮中 AMD EPYC 的 `[32,256,256]` 默认与各版本在严格 `atol=1e-5` 下均出现数值不符；复验使用 `atol=5e-5` 并额外与 FP64 参考对照。RTX 3090 上线程映射在部分小 shape 相比 TVM 默认路径退化。应将这些真实边界与结果一起呈现，不能只摘取最快比值。
 
 ## 面试追问和证据索引
 
