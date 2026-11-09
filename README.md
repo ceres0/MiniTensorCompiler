@@ -1,6 +1,6 @@
 # MiniTensorCompiler
 
-基于 Apache TVM Relax / TensorIR 的模型编译实验项目。当前完成静态 ONNX 模型的检查、Relax 导入、LLVM CPU 编译和 VM 执行，与 ONNX Runtime 对照，并实现受语义保护的冗余 reshape 链归并。Relax、ONNX frontend、LLVM codegen 和 VM 来自 TVM；自定义算子调度尚未完成。
+基于 Apache TVM Relax / TensorIR 的模型编译实验项目。当前完成静态 ONNX 导入、LLVM CPU 基线，以及受语义保护的 reshape 链归并和线性子图融合实验。Relax、ONNX frontend、融合基础设施、LLVM codegen 和 VM 来自 TVM；自定义算子调度尚未完成。
 
 ## 环境和运行
 
@@ -57,6 +57,16 @@ uv run --locked python -m minicompiler reshape --model runs/models/mlp.onnx --ou
 ```
 
 示例展示两层 reshape 合并，并编译执行前后版本验证数值。CLI 对输入 ONNX 模型分别输出改写前后 IR 和含命中、跳过原因的 JSON；普通 MLP 未必包含匹配模式。该 Pass 对未知、动态或零长度形状保守跳过；更多前提和回归用例见 [Pass 正确性说明](docs/pass_correctness.md)。TVM 自带类似 Pass，此处不宣称性能提升。
+
+## 线性子图融合
+
+```bash
+uv run --locked python examples/05_linear_fusion.py --output-dir runs/linear-evidence
+uv run --locked python -m minicompiler linear --model runs/models/mlp.onnx --output-dir runs/mlp/linear
+uv run --locked python -m minicompiler bench --model runs/models/mlp.onnx --target llvm --mode custom --threads 1 --output runs/bench/mlp-custom.json
+```
+
+自定义规则使用 TVM 的融合基础设施将合规的 FP32 `relu(matmul(x, w) + bias)` 分组；实验命令输出融合前后的 Relax 和 TIR。`custom` 基准在同一进程、相同模型和输入下测量 TVM Default 与自定义路径，并分别校验 ORT。完整约束、TIR 证据、QKV 实验与性能限制见 [线性融合说明](docs/linear_fusion.md)。
 
 ## 参考资料
 

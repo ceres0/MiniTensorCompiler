@@ -20,10 +20,15 @@ def main(argv=None):
     reshape.add_argument("--model", required=True, type=Path)
     reshape.add_argument("--output-dir", required=True, type=Path)
     reshape.add_argument("--disable", action="store_true", help="dump unchanged IR for comparison")
+    linear = subparsers.add_parser("linear", help="group guarded MatMul + bias + ReLU subgraphs")
+    linear.add_argument("--model", required=True, type=Path)
+    linear.add_argument("--output-dir", required=True, type=Path)
+    linear.add_argument("--disable", action="store_true")
+    linear.add_argument("--keep-params-in-input", action="store_true")
     bench = subparsers.add_parser("bench", help="compare a TVM CPU baseline with ONNX Runtime")
     bench.add_argument("--model", type=Path, required=True)
     bench.add_argument("--target", choices=["llvm"], default="llvm")
-    bench.add_argument("--mode", choices=["default", "nofusion"], default="default")
+    bench.add_argument("--mode", choices=["default", "nofusion", "custom"], default="default")
     bench.add_argument("--threads", type=int, default=1)
     bench.add_argument("--seed", type=int, default=0)
     bench.add_argument("--warmup", type=int, default=30)
@@ -31,6 +36,30 @@ def main(argv=None):
     bench.add_argument("--rounds", type=int, default=3)
     bench.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
+    if args.command == "linear":
+        from .frontend.onnx_loader import OnnxImportError, import_relax, load_and_summarize
+        from .passes.linear_bias_relu import run_linear_bias_relu
+        try:
+            names = ("00_relax_before.py", "01_relax_after.py", "02_linear_report.json")
+            if any((args.output_dir / name).exists() for name in names):
+                raise FileExistsError(f"output files already exist in {args.output_dir}; choose a new directory")
+            model, _ = load_and_summarize(args.model)
+            before = import_relax(model, keep_params_in_input=args.keep_params_in_input)
+            after, report = run_linear_bias_relu(before, enabled=not args.disable)
+            report["keep_params_in_input"] = args.keep_params_in_input
+            before_text, after_text = before.script(), after.script()
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            (args.output_dir / names[0]).write_text(before_text + "\n", encoding="utf-8")
+            (args.output_dir / names[1]).write_text(after_text + "\n", encoding="utf-8")
+            (args.output_dir / names[2]).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        except (OnnxImportError, ValueError, RuntimeError, OSError) as exc:
+            print(f"Linear pass failed: {exc}", file=sys.stderr)
+            return 1
+        print(f"Linear pass report and IR written to {args.output_dir}")
+        if report.get("status") == "failed":
+            print(f"Linear pass rolled back: {report.get('error')}", file=sys.stderr)
+            return 1
+        return 0
     if args.command == "reshape":
         from .frontend.onnx_loader import OnnxImportError, import_relax, load_and_summarize
         from .passes.redundant_reshape import run_redundant_reshape

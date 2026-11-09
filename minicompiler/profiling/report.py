@@ -42,8 +42,21 @@ def run_benchmark(model_path, *, target="llvm", mode="default", threads=1, seed=
     model, summary = load_and_summarize(model_path)
     mod = import_relax(model, keep_params_in_input=False)
     import_ms = (perf_counter_ns() - start) / 1e6
-    runner = build_runner(mod, mode=mode, target=target,
-                          onnx_input_names=[entry["name"] for entry in summary["inputs"]])
+    input_names = [entry["name"] for entry in summary["inputs"]]
+    default_runner = None
+    custom_report = None
+    custom_pass_ms = None
+    if mode == "custom":
+        from minicompiler.passes.linear_bias_relu import run_linear_bias_relu
+        default_runner = build_runner(mod, mode="default", target=target, onnx_input_names=input_names)
+        start = perf_counter_ns()
+        transformed, custom_report = run_linear_bias_relu(mod)
+        custom_pass_ms = (perf_counter_ns() - start) / 1e6
+        if custom_report["status"] != "ok":
+            raise RuntimeError(f"linear pass failed: {custom_report['error']}")
+    else:
+        transformed = mod
+    runner = build_runner(transformed, mode=mode, target=target, onnx_input_names=input_names)
     actual_threads = tvm.runtime.num_threads()
     if actual_threads != threads:
         raise RuntimeError(f"TVM runtime reports {actual_threads} threads; requested {threads}. "
@@ -54,16 +67,28 @@ def run_benchmark(model_path, *, target="llvm", mode="default", threads=1, seed=
     reference = ort_run(inputs)
     actual = runner.outputs_to_numpy(runner.run_prepared(prepared))
     correctness = compare_outputs(actual, reference)
+    default_prepared = default_runner.prepare_inputs(inputs) if default_runner else None
+    default_correctness = (compare_outputs(default_runner.outputs_to_numpy(default_runner.run_prepared(default_prepared)), reference)
+                           if default_runner else None)
     # Correctness is evaluated before collecting any performance measurements.
     # ORT returns NumPy arrays while TVM returns runtime tensors; no explicit
     # conversion or input copying is included in either timed callable.
     inference = None
-    if correctness["passed"]:
+    if correctness["passed"] and (default_correctness is None or default_correctness["passed"]):
         inference = {
             "tvm": measure(lambda: runner.run_prepared(prepared), warmup, repeat, rounds),
             "ort": measure(lambda: ort_run(inputs), warmup, repeat, rounds),
             "timing_scope": "Python API call including runtime output allocation; prepared inputs, model/session setup and explicit TVM-to-NumPy conversion excluded. ORT returns NumPy arrays directly.",
         }
+        if default_runner:
+            inference["tvm_default"] = measure(lambda: default_runner.run_prepared(default_prepared), warmup, repeat, rounds)
+            inference["default_over_custom_speedup"] = (
+                inference["tvm_default"]["median_ms"] / inference["tvm"]["median_ms"]
+                if custom_report["rewrites"] else None
+            )
+    if default_correctness is not None:
+        correctness["default_vs_ort"] = default_correctness
+        correctness["passed"] = correctness["passed"] and default_correctness["passed"]
     environment = collect_report()
     environment.update({"requested_threads": threads, "tvm_runtime_threads": actual_threads,
                         "ort_intra_op_threads": threads, "ort_inter_op_threads": 1,
@@ -78,8 +103,11 @@ def run_benchmark(model_path, *, target="llvm", mode="default", threads=1, seed=
                   "inputs": summary["inputs"], "opsets": summary["opsets"], "input_seed": seed,
                   "input_distribution": "numpy default_rng standard_normal float32", "weights": "embedded ONNX initializers"},
         "pipeline": runner.pipeline,
+        "custom_pass": custom_report,
         "correctness": correctness,
         "compilation": {"onnx_load_check_shape_inference_and_import_ms": import_ms,
-                        "tvm_compile_ms": runner.compile_time_ms},
+                        "tvm_compile_ms": runner.compile_time_ms,
+                        "custom_pass_ms": custom_pass_ms,
+                        "tvm_default_compile_ms": default_runner.compile_time_ms if default_runner else None},
         "inference": inference,
     }
