@@ -16,6 +16,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+gpu = [
+    "cuda-bindings==13.5.0; sys_platform == 'linux'",
+    "nvidia-cuda-nvrtc==13.0.88; sys_platform == 'linux'",
+]
 models = [
     "torch==2.11.0",
 ]

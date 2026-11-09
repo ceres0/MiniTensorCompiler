@@ -95,6 +95,19 @@ uv run --locked python -m benchmarks.run_suite --output-dir runs/repro-suite --t
 
 该命令依次生成固定种子的 MLP、CNN，采集 ORT/TVM 对照与 NoFusion 诊断，并运行一个 MatMul 调度消融；结果、参数和日志保存在指定的新目录。各报告中的 Pass 时间由实际编译时的 PassInstrument 采集；嵌套的 inclusive 时间不能直接相加，运行时 kernel 数尚未测量。详见 [架构](docs/architecture.md)、[实验记录](docs/experiments.md) 和 [benchmark 方法](docs/benchmark_methodology.md)。
 
+## NVIDIA GPU Docker
+
+GPU 镜像需要 Linux x86_64 NVIDIA GPU 主机、兼容 CUDA 13 的 NVIDIA 驱动以及已配置 Docker 的 NVIDIA Container Toolkit。构建并验证 GPU：
+
+```bash
+docker build -t minitensorcompiler:cuda .
+docker run --rm --gpus all minitensorcompiler:cuda nvidia-smi
+docker run --rm --gpus all minitensorcompiler:cuda python examples/cuda_add.py
+docker run --rm --gpus all minitensorcompiler:cuda python examples/cuda_mlp.py
+```
+
+最后两条分别编译运行 CUDA Add 和静态 ONNX MLP，并核对数值；MLP 示例也可通过挂载模型后使用 `--model` 指定 ONNX 文件。默认镜像不含 PyTorch；需要已有模型生成脚本或完整 CPU suite 时，使用 `docker build --build-arg INCLUDE_MODELS=1 -t minitensorcompiler:cuda-full .`。现有 `minicompiler compile` 和 `bench` 仍为 LLVM CPU 路径；CUDA 示例使用 TVM 的 CUDA 默认 pipeline。详细前提、指定设备、结果挂载及验证范围见 [GPU Docker 说明](docs/docker_gpu.md)。
+
 ## 参考资料
 
 TVM 源码和教程参考固定在 [v0.27.0 tag](https://github.com/apache/tvm/tree/v0.27.0)（release commit `4d0ac16`）。PyPI 的 wheel 版本固定为 `0.27.0.post1`；不能仅凭 tag 假定 post-release wheel 与源码完全一致。后续 API 以安装的 wheel 和其对应源码为准。

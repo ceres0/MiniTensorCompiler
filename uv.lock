@@ -192,6 +192,10 @@ dependencies = [
 dev = [
     { name = "pytest" },
 ]
+gpu = [
+    { name = "cuda-bindings", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cuda-nvrtc", marker = "sys_platform == 'linux'" },
+]
 models = [
     { name = "torch" },
 ]
@@ -199,13 +203,15 @@ models = [
 [package.metadata]
 requires-dist = [
     { name = "apache-tvm", specifier = "==0.27.0.post1" },
+    { name = "cuda-bindings", marker = "sys_platform == 'linux' and extra == 'gpu'", specifier = "==13.5.0" },
     { name = "numpy", specifier = ">=1.26,<3" },
+    { name = "nvidia-cuda-nvrtc", marker = "sys_platform == 'linux' and extra == 'gpu'", specifier = "==13.0.88" },
     { name = "onnx", specifier = ">=1.16,<2" },
     { name = "onnxruntime", specifier = ">=1.18,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<10" },
     { name = "torch", marker = "extra == 'models'", specifier = "==2.11.0" },
 ]
-provides-extras = ["dev", "models"]
+provides-extras = ["dev", "gpu", "models"]
 
 [[package]]
 name = "ml-dtypes"
