@@ -1,6 +1,6 @@
 # MiniTensorCompiler
 
-基于 Apache TVM Relax / TensorIR 的模型编译实验项目。当前完成静态 ONNX 导入、LLVM CPU 基线，以及受语义保护的 reshape 链归并和线性子图融合实验。Relax、ONNX frontend、融合基础设施、LLVM codegen 和 VM 来自 TVM；自定义算子调度尚未完成。
+基于 Apache TVM Relax / TensorIR 的模型编译实验项目。当前完成静态 ONNX 导入、LLVM CPU 基线、受语义保护的图改写，以及静态 FP32 MatMul CPU 调度消融。Relax、ONNX frontend、融合基础设施、LLVM codegen 和 VM 来自 TVM。
 
 ## 环境和运行
 
@@ -67,6 +67,14 @@ uv run --locked python -m minicompiler bench --model runs/models/mlp.onnx --targ
 ```
 
 自定义规则使用 TVM 的融合基础设施将合规的 FP32 `relu(matmul(x, w) + bias)` 分组；实验命令输出融合前后的 Relax 和 TIR。`custom` 基准在同一进程、相同模型和输入下测量 TVM Default 与自定义路径，并分别校验 ORT。完整约束、TIR 证据、QKV 实验与性能限制见 [线性融合说明](docs/linear_fusion.md)。
+
+## MatMul CPU 调度消融
+
+```bash
+uv run --locked python -m benchmarks.matmul_schedule --threads 1 --output-dir runs/matmul-ablation
+```
+
+实验对比 TVM Default 与手写 TIR 的 naive、分块、重排、并行和向量化版本，输出各形状 IR、正确性及逐次延迟。适用范围、调度前提和测量边界见 [调度说明](docs/schedule_optimization.md)。
 
 ## 参考资料
 
