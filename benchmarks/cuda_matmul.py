@@ -8,6 +8,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -117,7 +118,7 @@ def main(argv=None):
         driver = subprocess.check_output(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"], text=True, timeout=5).strip().splitlines()[0]
     except (OSError, subprocess.SubprocessError, IndexError):
         driver = None
-    report={"recorded_at_utc":datetime.now(timezone.utc).isoformat(),"git":_git_info(),"environment":collect_report(),"gpu":{"name":dev.device_name,"compute_version":dev.compute_version,"driver_version":driver,"device_index":0,"profiler_ncu_available":shutil.which("ncu") is not None},"seed":args.seed,"warmup":args.warmup,"repeat":args.repeat,"rounds":args.rounds,"results":records,"method":"Relax VM wall time; preallocated inputs, output allocation and device.sync per invocation included; alternating order per round. No profiler or GPU clock isolation; not kernel-only latency."}
+    report={"recorded_at_utc":datetime.now(timezone.utc).isoformat(),"git":_git_info(),"environment":collect_report(),"gpu":{"name":dev.device_name,"compute_version":dev.compute_version,"driver_version":driver,"device_index":0,"visible_devices":os.environ.get("CUDA_VISIBLE_DEVICES"),"target":str(target),"compile_mode":os.environ.get("TVM_CUDA_COMPILE_MODE", "nvrtc"),"profiler_ncu_available":shutil.which("ncu") is not None},"seed":args.seed,"warmup":args.warmup,"repeat":args.repeat,"rounds":args.rounds,"results":records,"method":"Relax VM wall time; preallocated inputs, output allocation and device.sync per invocation included; alternating order per round. No profiler or GPU clock isolation; not kernel-only latency."}
     (args.output_dir/"report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False)+"\n")
     print(f"CUDA MatMul report: {args.output_dir / 'report.json'}")
     return 0 if success else 1

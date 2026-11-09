@@ -19,4 +19,7 @@ def make_cuda_matmul(m, k, n, threads=128):
     sch.bind(i, "blockIdx.y")
     sch.bind(jo, "blockIdx.x")
     sch.bind(ji, "threadIdx.x")
-    return sch.mod
+    # The CUDA Relax pipeline runs DLight. The kernel is already mapped to
+    # GPU threads, so prevent DLight from trying to schedule it a second time.
+    scheduled = sch.mod["main"].with_attr("tirx.is_scheduled", True)
+    return tvm.IRModule({"main": scheduled})

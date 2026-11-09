@@ -14,6 +14,26 @@ def test_cuda_matmul_maps_output_and_guards_tail():
     assert 'thread="threadIdx.x"' in script
     assert 'T.where(' in script
     assert 'T.init()' in script
+    assert '"tirx.is_scheduled": True' in script
+
+
+@pytest.mark.parametrize("shape", [(32, 128, 128), (17, 65, 70)])
+def test_cuda_default_pipeline_keeps_mapped_kernel(shape):
+    import tvm
+    from tvm import relax
+    m, k, n = shape
+    kernel = make_cuda_matmul(m, k, n)
+    builder = relax.BlockBuilder()
+    gv = builder.add_func(kernel["main"].without_attr("global_symbol"), "mapped")
+    a = relax.Var("a", relax.TensorType((m, k), "float32"))
+    b = relax.Var("b", relax.TensorType((k, n), "float32"))
+    with builder.function("main", [a, b]):
+        with builder.dataflow():
+            out = builder.emit_output(relax.op.call_tir(gv, (a, b), out_ty=relax.TensorType((m, n), "float32")))
+        builder.emit_func_output(out)
+    target = tvm.target.Target({"kind": "cuda", "arch": "sm_86"})
+    lowered = relax.get_default_pipeline(target)(builder.get())
+    assert "threadIdx.x" in lowered.script()
 
 
 @pytest.mark.parametrize("threads", [0, 1025, -1, True, 1.5])

@@ -6,6 +6,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import random
@@ -63,6 +64,20 @@ def _thread_affinities():
     return result
 
 
+def _violations(actual, reference, rtol, atol):
+    """Summarize the allclose threshold violations without masking cancellation."""
+    import numpy as np
+    difference = np.abs(np.asarray(actual, dtype=np.float64) - np.asarray(reference, dtype=np.float64))
+    limit = atol + rtol * np.abs(np.asarray(reference, dtype=np.float64))
+    mask = difference > limit
+    if not np.any(mask):
+        return {"count": 0, "largest_excess": None}
+    index = np.unravel_index(int(np.argmax(difference - limit)), difference.shape)
+    return {"count": int(np.count_nonzero(mask)), "largest_excess": {
+        "index": list(index), "actual": float(actual[index]), "reference": float(reference[index]),
+        "absolute_error": float(difference[index]), "allowed_error": float(limit[index])}}
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--output-dir", type=Path, required=True)
@@ -72,10 +87,14 @@ def main(argv=None):
     p.add_argument("--warmup", type=int, default=30)
     p.add_argument("--repeat", type=int, default=100)
     p.add_argument("--rounds", type=int, default=5)
+    p.add_argument("--rtol", type=float, default=1e-4)
+    p.add_argument("--atol", type=float, default=1e-5)
     p.add_argument("--shape", type=parse_triple, action="append")
     a = p.parse_args(argv)
     if a.threads < 1 or a.threads > len(a.cpus) or a.warmup < 0 or a.repeat < 1 or a.rounds < 1 or a.seed < 0:
         p.error("threads must fit selected CPUs; seed/warmup must be nonnegative and repeat/rounds positive")
+    if not math.isfinite(a.rtol) or not math.isfinite(a.atol) or a.rtol < 0 or a.atol < 0:
+        p.error("rtol and atol must be finite and nonnegative")
     shapes = a.shape or DEFAULT_SHAPES
     if len(set(shapes)) != len(shapes):
         p.error("duplicate shape")
@@ -110,6 +129,8 @@ def main(argv=None):
         x = rng.standard_normal((m, k), dtype=np.float32)
         w = rng.standard_normal((k, n), dtype=np.float32)
         reference = x @ w
+        reference_fp64 = x.astype(np.float64) @ w.astype(np.float64)
+        numpy_vs_fp64 = compare_outputs([reference], [reference_fp64], rtol=a.rtol, atol=a.atol)
         prepared = (tvm.runtime.tensor(x), tvm.runtime.tensor(w))
         stages, runners = {}, {}
         for stage in STAGES:
@@ -140,17 +161,22 @@ def main(argv=None):
                     (outdir / f"{stage}.s").write_text(assembly)
                 vm = relax.VirtualMachine(exe, tvm.cpu())
                 fn = vm["main"]
-                correctness = compare_outputs([fn(*prepared).numpy()], [reference])
+                output_numpy = fn(*prepared).numpy()
+                correctness = compare_outputs([output_numpy], [reference], rtol=a.rtol, atol=a.atol)
+                fp64_check = compare_outputs([output_numpy], [reference_fp64], rtol=a.rtol, atol=a.atol)
+                correctness["violations"] = _violations(output_numpy, reference, a.rtol, a.atol)
+                fp64_check["violations"] = _violations(output_numpy, reference_fp64, a.rtol, a.atol)
                 stages[stage] = {"correctness": correctness, "compile_ms": elapsed,
+                                 "correctness_vs_fp64": fp64_check,
                                  "assembly_available": bool(assembly), "samples_ms": []}
-                if not correctness["passed"]:
+                if not correctness["passed"] or not fp64_check["passed"]:
                     passed = False
                 runners[stage] = (vm, fn)
             except Exception as exc:
                 passed = False
                 stages[stage] = {"correctness": {"passed": False}, "error": f"{type(exc).__name__}: {exc}"}
         orders = []
-        if all(stages[s]["correctness"]["passed"] for s in STAGES):
+        if all(stages[s]["correctness"]["passed"] and stages[s]["correctness_vs_fp64"]["passed"] for s in STAGES):
             for stage in STAGES:
                 for _ in range(a.warmup):
                     runners[stage][1](*prepared)
@@ -174,7 +200,7 @@ def main(argv=None):
             for stage in STAGES:
                 stages[stage]["speedup_vs_default"] = stages["default"]["median_ms"] / stages[stage]["median_ms"]
         records.append({"shape": [m, k, n], "input_sha256": hashlib.sha256(x.tobytes() + w.tobytes()).hexdigest(),
-                        "stages": stages, "round_order": orders})
+                        "numpy_fp32_vs_fp64": numpy_vs_fp64, "stages": stages, "round_order": orders})
     environment = collect_report()
     environment.update({"affinity_requested": a.cpus, "affinity_actual": sorted(os.sched_getaffinity(0)),
                         "threads": a.threads, "tvm_runtime_threads": tvm.runtime.num_threads(),
@@ -182,7 +208,7 @@ def main(argv=None):
                         "target": "llvm", "power_policy": "not controlled", "background_load": "not controlled"})
     report = {"recorded_at_utc": datetime.now(timezone.utc).isoformat(), "git": _git_info(),
               "environment": environment, "seed": a.seed, "warmup": a.warmup, "repeat": a.repeat,
-              "rounds": a.rounds, "results": records,
+              "rounds": a.rounds, "rtol": a.rtol, "atol": a.atol, "results": records,
               "method": "Baseline is pinned TVM native default, not a tuned or BLAS baseline. Identical Relax VM call boundary, target and default pipeline. Shuffled stage order by round; samples include Python call and output allocation, not input preparation or NumPy conversion. Assembly from compiled LLVM modules; thread affinity is a snapshot of surviving threads, not a trace. No performance counters collected."}
     (a.output_dir / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
     print(f"Report written to {a.output_dir / 'report.json'}")
