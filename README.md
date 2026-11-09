@@ -76,6 +76,16 @@ uv run --locked python -m benchmarks.matmul_schedule --threads 1 --output-dir ru
 
 实验对比 TVM Default 与手写 TIR 的 naive、分块、重排、并行和向量化版本，输出各形状 IR、正确性及逐次延迟。适用范围、调度前提和测量边界见 [调度说明](docs/schedule_optimization.md)。
 
+## 编译工件与 IR 证据链
+
+```bash
+uv run --locked python -m minicompiler evidence --model runs/models/mlp.onnx --pass-mode scheduled --output-dir runs/mlp/trace
+uv run --locked python -m minicompiler compile --model runs/models/mlp.onnx --mode scheduled --output runs/mlp/artifact
+uv run --locked python -m minicompiler run --artifact runs/mlp/artifact --inputs runs/mlp/input.npz --output runs/mlp/output.npz
+```
+
+`evidence` 输出 ONNX 摘要、Relax、实际接入的调度 TIR、VM 字节码及可获取的 LLVM IR/汇编；`compile` 导出内嵌权重的 CPU 工件，`run` 使用 NPZ 输入并验证输入名称、形状和 dtype。完整输入生成、文件来源与平台限制见 [IR 证据链](docs/ir_walkthrough.md)。仅加载可信原生工件；当前没有宣称跨机器或 CUDA 兼容。
+
 ## 参考资料
 
 TVM 源码和教程参考固定在 [v0.27.0 tag](https://github.com/apache/tvm/tree/v0.27.0)（release commit `4d0ac16`）。PyPI 的 wheel 版本固定为 `0.27.0.post1`；不能仅凭 tag 假定 post-release wheel 与源码完全一致。后续 API 以安装的 wheel 和其对应源码为准。

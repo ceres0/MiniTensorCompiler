@@ -20,7 +20,11 @@ class TVMRunner:
         """Copy named CPU arrays once before timing; return ordered TVM tensors."""
         if set(inputs) != set(self.input_names):
             raise ValueError(f"Expected inputs {self.input_names}, got {tuple(inputs)}")
-        return tuple(tvm.runtime.tensor(np.ascontiguousarray(inputs[name]), device=self.device)
+        def contiguous_preserving_shape(value):
+            array = np.asarray(value)
+            # ascontiguousarray changes a scalar's rank from zero to one.
+            return array if array.flags.c_contiguous else np.ascontiguousarray(array)
+        return tuple(tvm.runtime.tensor(contiguous_preserving_shape(inputs[name]), device=self.device)
                      for name in self.input_names)
 
     def run_prepared(self, prepared):

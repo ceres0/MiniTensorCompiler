@@ -25,6 +25,19 @@ def main(argv=None):
     linear.add_argument("--output-dir", required=True, type=Path)
     linear.add_argument("--disable", action="store_true")
     linear.add_argument("--keep-params-in-input", action="store_true")
+    evidence = subparsers.add_parser("evidence", help="capture an ONNX-to-LLVM CPU evidence chain")
+    evidence.add_argument("--model", required=True, type=Path)
+    evidence.add_argument("--output-dir", required=True, type=Path)
+    evidence.add_argument("--pass-mode", choices=["none", "reshape", "linear", "scheduled"], default="linear")
+    compile_cmd = subparsers.add_parser("compile", help="compile and export a CPU VM artifact")
+    compile_cmd.add_argument("--model", required=True, type=Path)
+    compile_cmd.add_argument("--target", choices=["llvm"], default="llvm")
+    compile_cmd.add_argument("--mode", choices=["default", "nofusion", "custom", "scheduled"], default="default")
+    compile_cmd.add_argument("--output", required=True, type=Path)
+    run_cmd = subparsers.add_parser("run", help="run an exported CPU VM artifact on NPZ inputs")
+    run_cmd.add_argument("--artifact", required=True, type=Path)
+    run_cmd.add_argument("--inputs", required=True, type=Path)
+    run_cmd.add_argument("--output", required=True, type=Path)
     bench = subparsers.add_parser("bench", help="compare a TVM CPU baseline with ONNX Runtime")
     bench.add_argument("--model", type=Path, required=True)
     bench.add_argument("--target", choices=["llvm"], default="llvm")
@@ -36,6 +49,45 @@ def main(argv=None):
     bench.add_argument("--rounds", type=int, default=3)
     bench.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
+    if args.command == "evidence":
+        from .compiler.evidence import export_evidence
+        try:
+            export_evidence(args.model, args.output_dir, pass_mode=args.pass_mode)
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(f"Evidence export failed: {exc}", file=sys.stderr)
+            return 1
+        print(f"Evidence written to {args.output_dir}")
+        return 0
+    if args.command == "compile":
+        from .compiler.artifacts import export_onnx_artifact
+        try:
+            export_onnx_artifact(args.model, args.output, target=args.target, mode=args.mode)
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(f"Compilation failed: {exc}", file=sys.stderr)
+            return 1
+        print(f"VM artifact written to {args.output}")
+        return 0
+    if args.command == "run":
+        import numpy as np
+        from .compiler.artifacts import load_artifact
+        try:
+            if args.output.exists():
+                raise FileExistsError(f"output already exists: {args.output}")
+            artifact = load_artifact(args.artifact)
+            with np.load(args.inputs, allow_pickle=False) as archive:
+                inputs = {key: archive[key] for key in archive.files}
+            values = artifact.run(inputs)
+            names = artifact.manifest["model"]["outputs"]
+            if len(names) != len(values) or len(set(names)) != len(names):
+                raise ValueError("artifact output names do not match VM outputs")
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            with args.output.open("xb") as file:
+                np.savez(file, **dict(zip(names, values, strict=True)))
+        except (ValueError, RuntimeError, OSError, KeyError) as exc:
+            print(f"VM execution failed: {exc}", file=sys.stderr)
+            return 1
+        print(f"VM outputs written to {args.output}")
+        return 0
     if args.command == "linear":
         from .frontend.onnx_loader import OnnxImportError, import_relax, load_and_summarize
         from .passes.linear_bias_relu import run_linear_bias_relu
