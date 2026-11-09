@@ -1,0 +1,1574 @@
+{
+  "recorded_at_utc": "2026-11-09T03:26:04.322951+00:00",
+  "git": {
+    "commit": "bfe7a2cda43462e1796c6d650894f88635808597",
+    "dirty": false
+  },
+  "environment": {
+    "os": "macOS-26.5.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "cpu": "Apple M2",
+    "logical_cpu_count": 8,
+    "python": "3.11.15",
+    "llvm_config_version": null,
+    "tvm_build_llvm_version": null,
+    "tvm_build_llvm_major": 22,
+    "packages": {
+      "apache-tvm": "0.27.0.post1",
+      "apache-tvm-ffi": "0.1.15.post2",
+      "numpy": "2.4.6",
+      "onnx": "1.23.2",
+      "onnxruntime": "1.31.1",
+      "pytest": "9.2.0"
+    },
+    "imports": {
+      "tvm": "ok",
+      "tvm_tirx": "ModuleNotFoundError: No module named 'tvm_tirx'",
+      "tvm.tirx": "ok",
+      "tvm.relax": "ok"
+    },
+    "requested_threads": 1,
+    "tvm_runtime_threads": 1,
+    "ort_intra_op_threads": 1,
+    "ort_inter_op_threads": 1,
+    "ort_provider": "CPUExecutionProvider",
+    "onnxruntime_version": "1.31.1",
+    "cpu_affinity": "not controlled",
+    "power_policy": "not controlled"
+  },
+  "model": {
+    "path": "/Users/ceres/CodingRepository/CodexSpace/MiniTensorCompiler/runs/final-suite/models/mlp.onnx",
+    "sha256": "a2299c1ab5c43a862d041a1ccd9707726fbbd27d189a7e5765b541fb01707342",
+    "sha256_scope": "ONNX file only; external tensor data excluded",
+    "inputs": [
+      {
+        "name": "input",
+        "shape": [
+          1,
+          128
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "opsets": [
+      {
+        "domain": "ai.onnx",
+        "version": 17
+      }
+    ],
+    "input_seed": 13,
+    "input_distribution": "numpy default_rng standard_normal float32",
+    "weights": "embedded ONNX initializers"
+  },
+  "pipeline": {
+    "mode": "nofusion",
+    "target": "{\"kind\":\"llvm\",\"tag\":\"\",\"keys\":[\"arm_cpu\",\"cpu\"],\"feature.has_matmul_i8\":false,\"feature.has_fp16_simd\":false,\"feature.has_dotprod\":false,\"feature.has_sve\":false,\"feature.has_sme\":false,\"feature.has_asimd\":true,\"feature.is_aarch64\":false,\"mtriple\":\"arm64-apple-darwin25.5.0\"}",
+    "relax_pipeline": "tvm.compile default (generic CPU build pipeline)",
+    "tir_pipeline": "default",
+    "pass_context_opt_level": 2,
+    "disabled_passes": [
+      "FuseOps",
+      "FuseTIR"
+    ],
+    "note": "TVM 0.27.0.post1 CPU default has no FuseOps/FuseTIR; custom adds FuseTIR after LegalizeOps; nofusion may match default."
+  },
+  "custom_pass": null,
+  "correctness": {
+    "passed": true,
+    "rtol": 0.0001,
+    "atol": 1e-05,
+    "max_abs_error": 0.0,
+    "max_rel_error": 0.0,
+    "rmse": 0.0,
+    "relative_error_floor": 1e-12
+  },
+  "compilation": {
+    "onnx_load_check_shape_inference_and_import_ms": 15.177458999999999,
+    "onnx_load_check_shape_inference_ms": 8.1955,
+    "relax_import_ms": 6.981959,
+    "tvm_compile_ms": 34.605916,
+    "custom_pass_ms": null,
+    "tvm_default_compile_ms": null,
+    "pass_timing": {
+      "events": [
+        {
+          "name": "NormalizeGlobalVar",
+          "depth": 3,
+          "inclusive_ms": 0.006333,
+          "exclusive_ms": 0.006333
+        },
+        {
+          "name": "DispatchSampling",
+          "depth": 2,
+          "inclusive_ms": 0.15,
+          "exclusive_ms": 0.143667
+        },
+        {
+          "name": "NormalizeGlobalVar",
+          "depth": 3,
+          "inclusive_ms": 0.003625,
+          "exclusive_ms": 0.003625
+        },
+        {
+          "name": "DispatchSortScan",
+          "depth": 2,
+          "inclusive_ms": 0.077584,
+          "exclusive_ms": 0.073959
+        },
+        {
+          "name": "LegalizeOps",
+          "depth": 2,
+          "inclusive_ms": 1.915708,
+          "exclusive_ms": 1.915708
+        },
+        {
+          "name": "RewriteDataflowReshape",
+          "depth": 2,
+          "inclusive_ms": 0.065417,
+          "exclusive_ms": 0.065417
+        },
+        {
+          "name": "ToNonDataflow",
+          "depth": 2,
+          "inclusive_ms": 0.027542,
+          "exclusive_ms": 0.027542
+        },
+        {
+          "name": "RemovePurityChecking",
+          "depth": 2,
+          "inclusive_ms": 0.019875,
+          "exclusive_ms": 0.019875
+        },
+        {
+          "name": "CallTIRRewrite",
+          "depth": 2,
+          "inclusive_ms": 0.073792,
+          "exclusive_ms": 0.073792
+        },
+        {
+          "name": "StaticPlanBlockMemory",
+          "depth": 2,
+          "inclusive_ms": 0.088583,
+          "exclusive_ms": 0.088583
+        },
+        {
+          "name": "RewriteCUDAGraph",
+          "depth": 2,
+          "inclusive_ms": 0.001708,
+          "exclusive_ms": 0.001708
+        },
+        {
+          "name": "LowerAllocTensor",
+          "depth": 2,
+          "inclusive_ms": 0.031,
+          "exclusive_ms": 0.031
+        },
+        {
+          "name": "KillAfterLastUse",
+          "depth": 2,
+          "inclusive_ms": 0.1555,
+          "exclusive_ms": 0.1555
+        },
+        {
+          "name": "LowerRuntimeBuiltin",
+          "depth": 2,
+          "inclusive_ms": 0.055208,
+          "exclusive_ms": 0.055208
+        },
+        {
+          "name": "NormalizeGlobalVar",
+          "depth": 3,
+          "inclusive_ms": 0.003792,
+          "exclusive_ms": 0.003792
+        },
+        {
+          "name": "ComputePrimValue",
+          "depth": 2,
+          "inclusive_ms": 0.031875,
+          "exclusive_ms": 0.028083
+        },
+        {
+          "name": "VMShapeLower",
+          "depth": 2,
+          "inclusive_ms": 0.163,
+          "exclusive_ms": 0.163
+        },
+        {
+          "name": "AttachGlobalSymbol",
+          "depth": 2,
+          "inclusive_ms": 0.013208,
+          "exclusive_ms": 0.013208
+        },
+        {
+          "name": "sequential",
+          "depth": 1,
+          "inclusive_ms": 2.924042,
+          "exclusive_ms": 0.054042
+        },
+        {
+          "name": "_pipeline",
+          "depth": 0,
+          "inclusive_ms": 2.975208,
+          "exclusive_ms": 0.051166
+        },
+        {
+          "name": "tirx.BindTarget",
+          "depth": 0,
+          "inclusive_ms": 0.155958,
+          "exclusive_ms": 0.155958
+        },
+        {
+          "name": "s_tir.CanonicalizeLoop",
+          "depth": 2,
+          "inclusive_ms": 0.013041,
+          "exclusive_ms": 0.013041
+        },
+        {
+          "name": "s_tir.LowerCrossThreadReduction",
+          "depth": 2,
+          "inclusive_ms": 0.092167,
+          "exclusive_ms": 0.092167
+        },
+        {
+          "name": "s_tir.LowerInitBlock",
+          "depth": 2,
+          "inclusive_ms": 0.007167,
+          "exclusive_ms": 0.007167
+        },
+        {
+          "name": "s_tir.PlanAndUpdateBufferAllocationLocation",
+          "depth": 2,
+          "inclusive_ms": 0.055542,
+          "exclusive_ms": 0.055542
+        },
+        {
+          "name": "s_tir.ConvertBlocksToOpaque",
+          "depth": 2,
+          "inclusive_ms": 0.03275,
+          "exclusive_ms": 0.03275
+        },
+        {
+          "name": "s_tir.LiftThreadBinding",
+          "depth": 2,
+          "inclusive_ms": 0.006958,
+          "exclusive_ms": 0.006958
+        },
+        {
+          "name": "s_tir.ManifestSharedMemoryLocalStage",
+          "depth": 2,
+          "inclusive_ms": 0.011,
+          "exclusive_ms": 0.011
+        },
+        {
+          "name": "s_tir.CompactBufferAllocation",
+          "depth": 2,
+          "inclusive_ms": 0.214,
+          "exclusive_ms": 0.214
+        },
+        {
+          "name": "s_tir.LowerAutoCopy",
+          "depth": 2,
+          "inclusive_ms": 0.028625,
+          "exclusive_ms": 0.028625
+        },
+        {
+          "name": "s_tir.UnifyThreadBinding",
+          "depth": 2,
+          "inclusive_ms": 0.01025,
+          "exclusive_ms": 0.01025
+        },
+        {
+          "name": "s_tir.LowerMatchBuffer",
+          "depth": 2,
+          "inclusive_ms": 0.043208,
+          "exclusive_ms": 0.043208
+        },
+        {
+          "name": "s_tir.StmtSimplify",
+          "depth": 2,
+          "inclusive_ms": 0.272916,
+          "exclusive_ms": 0.272916
+        },
+        {
+          "name": "s_tir.InjectPermutedLayout",
+          "depth": 2,
+          "inclusive_ms": 0.062959,
+          "exclusive_ms": 0.062959
+        },
+        {
+          "name": "s_tir.AnnotateIrregularLoop",
+          "depth": 2,
+          "inclusive_ms": 0.004625,
+          "exclusive_ms": 0.004625
+        },
+        {
+          "name": "s_tir.InjectSoftwarePipeline",
+          "depth": 2,
+          "inclusive_ms": 0.039875,
+          "exclusive_ms": 0.039875
+        },
+        {
+          "name": "s_tir.TransformMmaBufferLayout",
+          "depth": 2,
+          "inclusive_ms": 0.014791,
+          "exclusive_ms": 0.014791
+        },
+        {
+          "name": "s_tir.LowerOpaqueBlock",
+          "depth": 2,
+          "inclusive_ms": 0.021708,
+          "exclusive_ms": 0.021708
+        },
+        {
+          "name": "tirx.FlattenBuffer",
+          "depth": 2,
+          "inclusive_ms": 0.334541,
+          "exclusive_ms": 0.334541
+        },
+        {
+          "name": "tirx.BF16ComputeLegalize",
+          "depth": 2,
+          "inclusive_ms": 0.028083,
+          "exclusive_ms": 0.028083
+        },
+        {
+          "name": "tirx.NarrowDataType",
+          "depth": 2,
+          "inclusive_ms": 0.096,
+          "exclusive_ms": 0.096
+        },
+        {
+          "name": "s_tir.LoopPartition",
+          "depth": 2,
+          "inclusive_ms": 0.053041,
+          "exclusive_ms": 0.053041
+        },
+        {
+          "name": "tirx.VectorizeLoop",
+          "depth": 2,
+          "inclusive_ms": 0.0045,
+          "exclusive_ms": 0.0045
+        },
+        {
+          "name": "s_tir.InjectVirtualThread",
+          "depth": 2,
+          "inclusive_ms": 0.061083,
+          "exclusive_ms": 0.061083
+        },
+        {
+          "name": "s_tir.InjectDoubleBuffer",
+          "depth": 2,
+          "inclusive_ms": 0.007042,
+          "exclusive_ms": 0.007042
+        },
+        {
+          "name": "tirx.StorageRewrite",
+          "depth": 2,
+          "inclusive_ms": 0.100167,
+          "exclusive_ms": 0.100167
+        },
+        {
+          "name": "s_tir.InsertHoistIfThenElse",
+          "depth": 3,
+          "inclusive_ms": 0.070791,
+          "exclusive_ms": 0.070791
+        },
+        {
+          "name": "s_tir.StmtSimplify",
+          "depth": 3,
+          "inclusive_ms": 0.187709,
+          "exclusive_ms": 0.187709
+        },
+        {
+          "name": "tirx.RemoveNoOp",
+          "depth": 3,
+          "inclusive_ms": 0.082709,
+          "exclusive_ms": 0.082709
+        },
+        {
+          "name": "s_tir.HoistIfThenElse",
+          "depth": 2,
+          "inclusive_ms": 0.350792,
+          "exclusive_ms": 0.009583
+        },
+        {
+          "name": "tirx.UnrollLoop",
+          "depth": 2,
+          "inclusive_ms": 0.012542,
+          "exclusive_ms": 0.012542
+        },
+        {
+          "name": "s_tir.RenormalizeSplitPattern",
+          "depth": 2,
+          "inclusive_ms": 0.099084,
+          "exclusive_ms": 0.099084
+        },
+        {
+          "name": "tirx.StmtSimplify",
+          "depth": 2,
+          "inclusive_ms": 0.136792,
+          "exclusive_ms": 0.136792
+        },
+        {
+          "name": "tirx.RemoveNoOp",
+          "depth": 2,
+          "inclusive_ms": 0.065208,
+          "exclusive_ms": 0.065208
+        },
+        {
+          "name": "s_tir.RewriteUnsafeSelect",
+          "depth": 2,
+          "inclusive_ms": 0.0045,
+          "exclusive_ms": 0.0045
+        },
+        {
+          "name": "tirx.CommonSubexprElim",
+          "depth": 2,
+          "inclusive_ms": 0.027208,
+          "exclusive_ms": 0.027208
+        },
+        {
+          "name": "tirx.FP8ComputeLegalize",
+          "depth": 2,
+          "inclusive_ms": 0.014166,
+          "exclusive_ms": 0.014166
+        },
+        {
+          "name": "s_tir.VerifyVTCMLimit",
+          "depth": 2,
+          "inclusive_ms": 0.002875,
+          "exclusive_ms": 0.002875
+        },
+        {
+          "name": "s_tir.LowerVtcmAlloc",
+          "depth": 2,
+          "inclusive_ms": 0.004333,
+          "exclusive_ms": 0.004333
+        },
+        {
+          "name": "tirx.VerifyMemory",
+          "depth": 2,
+          "inclusive_ms": 0.005083,
+          "exclusive_ms": 0.005083
+        },
+        {
+          "name": "tirx.AnnotateEntryFunc",
+          "depth": 2,
+          "inclusive_ms": 0.009083,
+          "exclusive_ms": 0.009083
+        },
+        {
+          "name": "s_tir.ThreadSync",
+          "depth": 2,
+          "inclusive_ms": 0.02525,
+          "exclusive_ms": 0.02525
+        },
+        {
+          "name": "s_tir.ThreadSync",
+          "depth": 2,
+          "inclusive_ms": 0.006417,
+          "exclusive_ms": 0.006417
+        },
+        {
+          "name": "s_tir.ThreadSync",
+          "depth": 2,
+          "inclusive_ms": 0.005875,
+          "exclusive_ms": 0.005875
+        },
+        {
+          "name": "s_tir.InferFragment",
+          "depth": 2,
+          "inclusive_ms": 0.008125,
+          "exclusive_ms": 0.008125
+        },
+        {
+          "name": "s_tir.LowerThreadAllreduce",
+          "depth": 2,
+          "inclusive_ms": 0.017667,
+          "exclusive_ms": 0.017667
+        },
+        {
+          "name": "s_tir.MergeSharedMemoryAllocations",
+          "depth": 2,
+          "inclusive_ms": 0.004667,
+          "exclusive_ms": 0.004667
+        },
+        {
+          "name": "tirx.ConvertSSA",
+          "depth": 3,
+          "inclusive_ms": 0.021167,
+          "exclusive_ms": 0.021167
+        },
+        {
+          "name": "tirx.SplitHostDevice",
+          "depth": 2,
+          "inclusive_ms": 0.048792,
+          "exclusive_ms": 0.027625
+        },
+        {
+          "name": "tirx.MakePackedAPI",
+          "depth": 2,
+          "inclusive_ms": 1.077333,
+          "exclusive_ms": 1.077333
+        },
+        {
+          "name": "tirx.FP8StorageLegalize",
+          "depth": 2,
+          "inclusive_ms": 0.051833,
+          "exclusive_ms": 0.051833
+        },
+        {
+          "name": "tirx.BF16StorageLegalize",
+          "depth": 2,
+          "inclusive_ms": 0.032125,
+          "exclusive_ms": 0.032125
+        },
+        {
+          "name": "sequential",
+          "depth": 1,
+          "inclusive_ms": 3.715667,
+          "exclusive_ms": 0.089878
+        },
+        {
+          "name": "_pipeline",
+          "depth": 0,
+          "inclusive_ms": 3.85325,
+          "exclusive_ms": 0.137583
+        },
+        {
+          "name": "tirx.Filter",
+          "depth": 0,
+          "inclusive_ms": 0.655041,
+          "exclusive_ms": 0.655041
+        },
+        {
+          "name": "tirx.Filter",
+          "depth": 0,
+          "inclusive_ms": 0.512667,
+          "exclusive_ms": 0.512667
+        },
+        {
+          "name": "tirx.LowerTVMBuiltin",
+          "depth": 1,
+          "inclusive_ms": 0.123583,
+          "exclusive_ms": 0.123583
+        },
+        {
+          "name": "tirx.LowerIntrin",
+          "depth": 1,
+          "inclusive_ms": 0.473833,
+          "exclusive_ms": 0.473833
+        },
+        {
+          "name": "sequential",
+          "depth": 0,
+          "inclusive_ms": 0.60375,
+          "exclusive_ms": 0.006334
+        }
+      ],
+      "by_pass": {
+        "NormalizeGlobalVar": {
+          "calls": 3,
+          "inclusive_ms": 0.01375,
+          "exclusive_ms": 0.01375
+        },
+        "DispatchSampling": {
+          "calls": 1,
+          "inclusive_ms": 0.15,
+          "exclusive_ms": 0.143667
+        },
+        "DispatchSortScan": {
+          "calls": 1,
+          "inclusive_ms": 0.077584,
+          "exclusive_ms": 0.073959
+        },
+        "LegalizeOps": {
+          "calls": 1,
+          "inclusive_ms": 1.915708,
+          "exclusive_ms": 1.915708
+        },
+        "RewriteDataflowReshape": {
+          "calls": 1,
+          "inclusive_ms": 0.065417,
+          "exclusive_ms": 0.065417
+        },
+        "ToNonDataflow": {
+          "calls": 1,
+          "inclusive_ms": 0.027542,
+          "exclusive_ms": 0.027542
+        },
+        "RemovePurityChecking": {
+          "calls": 1,
+          "inclusive_ms": 0.019875,
+          "exclusive_ms": 0.019875
+        },
+        "CallTIRRewrite": {
+          "calls": 1,
+          "inclusive_ms": 0.073792,
+          "exclusive_ms": 0.073792
+        },
+        "StaticPlanBlockMemory": {
+          "calls": 1,
+          "inclusive_ms": 0.088583,
+          "exclusive_ms": 0.088583
+        },
+        "RewriteCUDAGraph": {
+          "calls": 1,
+          "inclusive_ms": 0.001708,
+          "exclusive_ms": 0.001708
+        },
+        "LowerAllocTensor": {
+          "calls": 1,
+          "inclusive_ms": 0.031,
+          "exclusive_ms": 0.031
+        },
+        "KillAfterLastUse": {
+          "calls": 1,
+          "inclusive_ms": 0.1555,
+          "exclusive_ms": 0.1555
+        },
+        "LowerRuntimeBuiltin": {
+          "calls": 1,
+          "inclusive_ms": 0.055208,
+          "exclusive_ms": 0.055208
+        },
+        "ComputePrimValue": {
+          "calls": 1,
+          "inclusive_ms": 0.031875,
+          "exclusive_ms": 0.028083
+        },
+        "VMShapeLower": {
+          "calls": 1,
+          "inclusive_ms": 0.163,
+          "exclusive_ms": 0.163
+        },
+        "AttachGlobalSymbol": {
+          "calls": 1,
+          "inclusive_ms": 0.013208,
+          "exclusive_ms": 0.013208
+        },
+        "sequential": {
+          "calls": 3,
+          "inclusive_ms": 7.243459,
+          "exclusive_ms": 0.150254
+        },
+        "_pipeline": {
+          "calls": 2,
+          "inclusive_ms": 6.8284579999999995,
+          "exclusive_ms": 0.188749
+        },
+        "tirx.BindTarget": {
+          "calls": 1,
+          "inclusive_ms": 0.155958,
+          "exclusive_ms": 0.155958
+        },
+        "s_tir.CanonicalizeLoop": {
+          "calls": 1,
+          "inclusive_ms": 0.013041,
+          "exclusive_ms": 0.013041
+        },
+        "s_tir.LowerCrossThreadReduction": {
+          "calls": 1,
+          "inclusive_ms": 0.092167,
+          "exclusive_ms": 0.092167
+        },
+        "s_tir.LowerInitBlock": {
+          "calls": 1,
+          "inclusive_ms": 0.007167,
+          "exclusive_ms": 0.007167
+        },
+        "s_tir.PlanAndUpdateBufferAllocationLocation": {
+          "calls": 1,
+          "inclusive_ms": 0.055542,
+          "exclusive_ms": 0.055542
+        },
+        "s_tir.ConvertBlocksToOpaque": {
+          "calls": 1,
+          "inclusive_ms": 0.03275,
+          "exclusive_ms": 0.03275
+        },
+        "s_tir.LiftThreadBinding": {
+          "calls": 1,
+          "inclusive_ms": 0.006958,
+          "exclusive_ms": 0.006958
+        },
+        "s_tir.ManifestSharedMemoryLocalStage": {
+          "calls": 1,
+          "inclusive_ms": 0.011,
+          "exclusive_ms": 0.011
+        },
+        "s_tir.CompactBufferAllocation": {
+          "calls": 1,
+          "inclusive_ms": 0.214,
+          "exclusive_ms": 0.214
+        },
+        "s_tir.LowerAutoCopy": {
+          "calls": 1,
+          "inclusive_ms": 0.028625,
+          "exclusive_ms": 0.028625
+        },
+        "s_tir.UnifyThreadBinding": {
+          "calls": 1,
+          "inclusive_ms": 0.01025,
+          "exclusive_ms": 0.01025
+        },
+        "s_tir.LowerMatchBuffer": {
+          "calls": 1,
+          "inclusive_ms": 0.043208,
+          "exclusive_ms": 0.043208
+        },
+        "s_tir.StmtSimplify": {
+          "calls": 2,
+          "inclusive_ms": 0.46062499999999995,
+          "exclusive_ms": 0.46062499999999995
+        },
+        "s_tir.InjectPermutedLayout": {
+          "calls": 1,
+          "inclusive_ms": 0.062959,
+          "exclusive_ms": 0.062959
+        },
+        "s_tir.AnnotateIrregularLoop": {
+          "calls": 1,
+          "inclusive_ms": 0.004625,
+          "exclusive_ms": 0.004625
+        },
+        "s_tir.InjectSoftwarePipeline": {
+          "calls": 1,
+          "inclusive_ms": 0.039875,
+          "exclusive_ms": 0.039875
+        },
+        "s_tir.TransformMmaBufferLayout": {
+          "calls": 1,
+          "inclusive_ms": 0.014791,
+          "exclusive_ms": 0.014791
+        },
+        "s_tir.LowerOpaqueBlock": {
+          "calls": 1,
+          "inclusive_ms": 0.021708,
+          "exclusive_ms": 0.021708
+        },
+        "tirx.FlattenBuffer": {
+          "calls": 1,
+          "inclusive_ms": 0.334541,
+          "exclusive_ms": 0.334541
+        },
+        "tirx.BF16ComputeLegalize": {
+          "calls": 1,
+          "inclusive_ms": 0.028083,
+          "exclusive_ms": 0.028083
+        },
+        "tirx.NarrowDataType": {
+          "calls": 1,
+          "inclusive_ms": 0.096,
+          "exclusive_ms": 0.096
+        },
+        "s_tir.LoopPartition": {
+          "calls": 1,
+          "inclusive_ms": 0.053041,
+          "exclusive_ms": 0.053041
+        },
+        "tirx.VectorizeLoop": {
+          "calls": 1,
+          "inclusive_ms": 0.0045,
+          "exclusive_ms": 0.0045
+        },
+        "s_tir.InjectVirtualThread": {
+          "calls": 1,
+          "inclusive_ms": 0.061083,
+          "exclusive_ms": 0.061083
+        },
+        "s_tir.InjectDoubleBuffer": {
+          "calls": 1,
+          "inclusive_ms": 0.007042,
+          "exclusive_ms": 0.007042
+        },
+        "tirx.StorageRewrite": {
+          "calls": 1,
+          "inclusive_ms": 0.100167,
+          "exclusive_ms": 0.100167
+        },
+        "s_tir.InsertHoistIfThenElse": {
+          "calls": 1,
+          "inclusive_ms": 0.070791,
+          "exclusive_ms": 0.070791
+        },
+        "tirx.RemoveNoOp": {
+          "calls": 2,
+          "inclusive_ms": 0.14791700000000002,
+          "exclusive_ms": 0.14791700000000002
+        },
+        "s_tir.HoistIfThenElse": {
+          "calls": 1,
+          "inclusive_ms": 0.350792,
+          "exclusive_ms": 0.009583
+        },
+        "tirx.UnrollLoop": {
+          "calls": 1,
+          "inclusive_ms": 0.012542,
+          "exclusive_ms": 0.012542
+        },
+        "s_tir.RenormalizeSplitPattern": {
+          "calls": 1,
+          "inclusive_ms": 0.099084,
+          "exclusive_ms": 0.099084
+        },
+        "tirx.StmtSimplify": {
+          "calls": 1,
+          "inclusive_ms": 0.136792,
+          "exclusive_ms": 0.136792
+        },
+        "s_tir.RewriteUnsafeSelect": {
+          "calls": 1,
+          "inclusive_ms": 0.0045,
+          "exclusive_ms": 0.0045
+        },
+        "tirx.CommonSubexprElim": {
+          "calls": 1,
+          "inclusive_ms": 0.027208,
+          "exclusive_ms": 0.027208
+        },
+        "tirx.FP8ComputeLegalize": {
+          "calls": 1,
+          "inclusive_ms": 0.014166,
+          "exclusive_ms": 0.014166
+        },
+        "s_tir.VerifyVTCMLimit": {
+          "calls": 1,
+          "inclusive_ms": 0.002875,
+          "exclusive_ms": 0.002875
+        },
+        "s_tir.LowerVtcmAlloc": {
+          "calls": 1,
+          "inclusive_ms": 0.004333,
+          "exclusive_ms": 0.004333
+        },
+        "tirx.VerifyMemory": {
+          "calls": 1,
+          "inclusive_ms": 0.005083,
+          "exclusive_ms": 0.005083
+        },
+        "tirx.AnnotateEntryFunc": {
+          "calls": 1,
+          "inclusive_ms": 0.009083,
+          "exclusive_ms": 0.009083
+        },
+        "s_tir.ThreadSync": {
+          "calls": 3,
+          "inclusive_ms": 0.037542,
+          "exclusive_ms": 0.037542
+        },
+        "s_tir.InferFragment": {
+          "calls": 1,
+          "inclusive_ms": 0.008125,
+          "exclusive_ms": 0.008125
+        },
+        "s_tir.LowerThreadAllreduce": {
+          "calls": 1,
+          "inclusive_ms": 0.017667,
+          "exclusive_ms": 0.017667
+        },
+        "s_tir.MergeSharedMemoryAllocations": {
+          "calls": 1,
+          "inclusive_ms": 0.004667,
+          "exclusive_ms": 0.004667
+        },
+        "tirx.ConvertSSA": {
+          "calls": 1,
+          "inclusive_ms": 0.021167,
+          "exclusive_ms": 0.021167
+        },
+        "tirx.SplitHostDevice": {
+          "calls": 1,
+          "inclusive_ms": 0.048792,
+          "exclusive_ms": 0.027625
+        },
+        "tirx.MakePackedAPI": {
+          "calls": 1,
+          "inclusive_ms": 1.077333,
+          "exclusive_ms": 1.077333
+        },
+        "tirx.FP8StorageLegalize": {
+          "calls": 1,
+          "inclusive_ms": 0.051833,
+          "exclusive_ms": 0.051833
+        },
+        "tirx.BF16StorageLegalize": {
+          "calls": 1,
+          "inclusive_ms": 0.032125,
+          "exclusive_ms": 0.032125
+        },
+        "tirx.Filter": {
+          "calls": 2,
+          "inclusive_ms": 1.167708,
+          "exclusive_ms": 1.167708
+        },
+        "tirx.LowerTVMBuiltin": {
+          "calls": 1,
+          "inclusive_ms": 0.123583,
+          "exclusive_ms": 0.123583
+        },
+        "tirx.LowerIntrin": {
+          "calls": 1,
+          "inclusive_ms": 0.473833,
+          "exclusive_ms": 0.473833
+        }
+      },
+      "static_ir_snapshots": [
+        {
+          "after_pass": "LegalizeOps",
+          "tir_primfunc_count": 5
+        }
+      ],
+      "incomplete_passes": 0,
+      "timing_note": "Instrumented wall time includes callback overhead; inclusive pass times overlap. Do not sum inclusive times.",
+      "runtime_kernel_invocations": null
+    },
+    "default_pass_timing": null,
+    "codegen_ms": null,
+    "schedule_ms": null,
+    "cold_compile_note": "TVM build elapsed excludes Python startup; process cold state is not verified. In custom mode default is compiled first. Pass instrumentation adds overhead."
+  },
+  "ir_stats": {
+    "tir_primfunc_counts": [
+      {
+        "after_pass": "LegalizeOps",
+        "tir_primfunc_count": 5
+      }
+    ],
+    "runtime_kernel_invocations": null,
+    "runtime_kernel_invocations_reason": "Not measured by a runtime profiler"
+  },
+  "inference": {
+    "tvm": {
+      "warmup": 30,
+      "repetitions_per_round": 100,
+      "rounds": 3,
+      "samples_ms": [
+        [
+          0.07,
+          0.043417,
+          0.041666,
+          0.040208,
+          0.040417,
+          0.040333,
+          0.040334,
+          0.040291,
+          0.040292,
+          0.040417,
+          0.0405,
+          0.04025,
+          0.040333,
+          0.0405,
+          0.040416,
+          0.053041,
+          0.040458,
+          0.040416,
+          0.053041,
+          0.040291,
+          0.040417,
+          0.04025,
+          0.040416,
+          0.040291,
+          0.040416,
+          0.057833,
+          0.041958,
+          0.03925,
+          0.039416,
+          0.03975,
+          0.04525,
+          0.0405,
+          0.039375,
+          0.03925,
+          0.039334,
+          0.03925,
+          0.045,
+          0.040208,
+          0.040459,
+          0.046542,
+          0.042083,
+          0.047792,
+          0.0445,
+          0.051333,
+          0.039458,
+          0.03925,
+          0.039416,
+          0.039208,
+          0.039459,
+          0.039167,
+          0.039417,
+          0.039208,
+          0.039375,
+          0.039167,
+          0.039375,
+          0.039167,
+          0.039375,
+          0.03925,
+          0.039375,
+          0.03925,
+          0.039459,
+          0.039292,
+          0.039417,
+          0.03925,
+          0.039334,
+          0.039333,
+          0.039417,
+          0.039292,
+          0.039459,
+          0.039167,
+          0.0395,
+          0.039334,
+          0.044667,
+          0.046042,
+          0.048042,
+          0.039292,
+          0.039417,
+          0.039334,
+          0.039375,
+          0.039292,
+          0.039375,
+          0.039292,
+          0.039459,
+          0.039125,
+          0.039459,
+          0.039333,
+          0.039458,
+          0.039209,
+          0.039333,
+          0.039166,
+          0.0395,
+          0.039208,
+          0.039417,
+          0.039209,
+          0.039333,
+          0.039291,
+          0.039375,
+          0.03925,
+          0.039334,
+          0.03925
+        ],
+        [
+          0.039458,
+          0.03925,
+          0.0395,
+          0.039292,
+          0.039417,
+          0.039208,
+          0.039416,
+          0.039208,
+          0.039417,
+          0.03925,
+          0.039542,
+          0.03925,
+          0.039292,
+          0.039167,
+          0.039542,
+          0.039292,
+          0.039459,
+          0.039625,
+          0.03975,
+          0.039667,
+          0.039625,
+          0.039291,
+          0.039416,
+          0.039291,
+          0.039416,
+          0.039292,
+          0.039459,
+          0.039375,
+          0.039792,
+          0.039333,
+          0.039459,
+          0.039125,
+          0.039375,
+          0.039167,
+          0.039417,
+          0.039166,
+          0.039375,
+          0.039292,
+          0.039292,
+          0.039208,
+          0.039333,
+          0.03925,
+          0.039375,
+          0.03925,
+          0.039292,
+          0.039208,
+          0.039375,
+          0.039125,
+          0.039625,
+          0.03925,
+          0.0395,
+          0.039167,
+          0.039458,
+          0.039167,
+          0.039375,
+          0.039334,
+          0.0395,
+          0.039292,
+          0.039334,
+          0.039208,
+          0.039333,
+          0.046209,
+          0.041916,
+          0.039166,
+          0.039333,
+          0.039167,
+          0.039458,
+          0.039125,
+          0.039334,
+          0.039208,
+          0.039333,
+          0.039292,
+          0.039334,
+          0.03925,
+          0.039334,
+          0.039333,
+          0.039375,
+          0.039208,
+          0.039375,
+          0.039208,
+          0.039458,
+          0.039209,
+          0.039292,
+          0.039208,
+          0.039375,
+          0.039208,
+          0.039458,
+          0.039209,
+          0.039458,
+          0.03925,
+          0.0395,
+          0.039208,
+          0.039584,
+          0.03925,
+          0.039375,
+          0.039208,
+          0.039583,
+          0.039166,
+          0.039333,
+          0.03925
+        ],
+        [
+          0.039333,
+          0.039292,
+          0.039334,
+          0.039167,
+          0.039458,
+          0.03925,
+          0.039333,
+          0.039125,
+          0.039416,
+          0.03925,
+          0.039291,
+          0.046666,
+          0.055083,
+          0.059584,
+          0.041041,
+          0.040459,
+          0.0405,
+          0.040333,
+          0.040584,
+          0.040291,
+          0.040375,
+          0.04375,
+          0.055459,
+          0.046333,
+          0.041041,
+          0.040583,
+          0.046333,
+          0.041375,
+          0.04375,
+          0.048125,
+          0.040458,
+          0.046666,
+          0.047458,
+          0.052667,
+          0.042584,
+          0.043708,
+          0.039459,
+          0.039292,
+          0.039541,
+          0.03925,
+          0.039417,
+          0.039291,
+          0.042041,
+          0.039333,
+          0.0395,
+          0.039291,
+          0.039416,
+          0.039292,
+          0.039459,
+          0.039208,
+          0.049292,
+          0.039375,
+          0.0395,
+          0.042792,
+          0.039417,
+          0.047042,
+          0.039584,
+          0.0575,
+          0.053542,
+          0.051709,
+          0.058625,
+          0.041625,
+          0.039417,
+          0.039375,
+          0.046667,
+          0.039375,
+          0.045709,
+          0.039292,
+          0.0395,
+          0.03925,
+          0.039375,
+          0.039333,
+          0.039416,
+          0.039333,
+          0.039417,
+          0.039291,
+          0.039416,
+          0.03925,
+          0.039417,
+          0.03925,
+          0.039416,
+          0.039291,
+          0.039458,
+          0.03925,
+          0.039416,
+          0.039291,
+          0.039583,
+          0.039292,
+          0.039459,
+          0.039292,
+          0.0395,
+          0.039209,
+          0.039417,
+          0.03925,
+          0.039417,
+          0.03925,
+          0.039459,
+          0.039208,
+          0.039417,
+          0.039209
+        ]
+      ],
+      "median_ms": 0.039416,
+      "p95_ms": 0.04804615
+    },
+    "ort": {
+      "warmup": 30,
+      "repetitions_per_round": 100,
+      "rounds": 3,
+      "samples_ms": [
+        [
+          0.00775,
+          0.007458,
+          0.007375,
+          0.007375,
+          0.00725,
+          0.007166,
+          0.0075,
+          0.007417,
+          0.007417,
+          0.0075,
+          0.00725,
+          0.007209,
+          0.00725,
+          0.007542,
+          0.007208,
+          0.007291,
+          0.00825,
+          0.010208,
+          0.009708,
+          0.00975,
+          0.009959,
+          0.007583,
+          0.00725,
+          0.007291,
+          0.007166,
+          0.007375,
+          0.00725,
+          0.007292,
+          0.007292,
+          0.007333,
+          0.007208,
+          0.007292,
+          0.007167,
+          0.007292,
+          0.007208,
+          0.007375,
+          0.007375,
+          0.007375,
+          0.007125,
+          0.007334,
+          0.007208,
+          0.007584,
+          0.007292,
+          0.007375,
+          0.007375,
+          0.007333,
+          0.007459,
+          0.00725,
+          0.007375,
+          0.007208,
+          0.007292,
+          0.007417,
+          0.007292,
+          0.007334,
+          0.007292,
+          0.007167,
+          0.007292,
+          0.007417,
+          0.010709,
+          0.007833,
+          0.0075,
+          0.007417,
+          0.007375,
+          0.007417,
+          0.00725,
+          0.007292,
+          0.007375,
+          0.00725,
+          0.007375,
+          0.007167,
+          0.007375,
+          0.007334,
+          0.007417,
+          0.007292,
+          0.007375,
+          0.007416,
+          0.00725,
+          0.007625,
+          0.00725,
+          0.007083,
+          0.007334,
+          0.007208,
+          0.007166,
+          0.007166,
+          0.0075,
+          0.00725,
+          0.007167,
+          0.007292,
+          0.007458,
+          0.007542,
+          0.007166,
+          0.007458,
+          0.007292,
+          0.007541,
+          0.007291,
+          0.007166,
+          0.007291,
+          0.007292,
+          0.007083,
+          0.007291
+        ],
+        [
+          0.007541,
+          0.007166,
+          0.007333,
+          0.007459,
+          0.007208,
+          0.00725,
+          0.007958,
+          0.009917,
+          0.009667,
+          0.00975,
+          0.009167,
+          0.00725,
+          0.007541,
+          0.007333,
+          0.007375,
+          0.007417,
+          0.007333,
+          0.00725,
+          0.007333,
+          0.007291,
+          0.007291,
+          0.00725,
+          0.007417,
+          0.007125,
+          0.007209,
+          0.007375,
+          0.007167,
+          0.007125,
+          0.007334,
+          0.00725,
+          0.007292,
+          0.00725,
+          0.007334,
+          0.007166,
+          0.007375,
+          0.00725,
+          0.007375,
+          0.00725,
+          0.007209,
+          0.00725,
+          0.00725,
+          0.007167,
+          0.007209,
+          0.00725,
+          0.007417,
+          0.009875,
+          0.027125,
+          0.023417,
+          0.010417,
+          0.008833,
+          0.007833,
+          0.007709,
+          0.00725,
+          0.007333,
+          0.014417,
+          0.007417,
+          0.007209,
+          0.007042,
+          0.007,
+          0.007084,
+          0.007,
+          0.007083,
+          0.007084,
+          0.007083,
+          0.007083,
+          0.007125,
+          0.007125,
+          0.007,
+          0.007084,
+          0.006958,
+          0.007166,
+          0.008833,
+          0.009417,
+          0.007917,
+          0.007125,
+          0.007333,
+          0.00725,
+          0.007375,
+          0.00725,
+          0.00725,
+          0.007125,
+          0.007208,
+          0.007417,
+          0.006959,
+          0.007042,
+          0.007,
+          0.006917,
+          0.006959,
+          0.007083,
+          0.007083,
+          0.007083,
+          0.007,
+          0.007084,
+          0.007166,
+          0.007083,
+          0.007,
+          0.007,
+          0.006958,
+          0.007,
+          0.007042
+        ],
+        [
+          0.007083,
+          0.007125,
+          0.007084,
+          0.007083,
+          0.007084,
+          0.007042,
+          0.007125,
+          0.006958,
+          0.007083,
+          0.007083,
+          0.007041,
+          0.007042,
+          0.009333,
+          0.009375,
+          0.007791,
+          0.007166,
+          0.007166,
+          0.007166,
+          0.007083,
+          0.007167,
+          0.007334,
+          0.007208,
+          0.007208,
+          0.007417,
+          0.007334,
+          0.007291,
+          0.007416,
+          0.009916,
+          0.009959,
+          0.007625,
+          0.007542,
+          0.007541,
+          0.007666,
+          0.007792,
+          0.007209,
+          0.007334,
+          0.007042,
+          0.006958,
+          0.007083,
+          0.007125,
+          0.007541,
+          0.009542,
+          0.00925,
+          0.007458,
+          0.007166,
+          0.008041,
+          0.010041,
+          0.009625,
+          0.009791,
+          0.009916,
+          0.00925,
+          0.009417,
+          0.009542,
+          0.008833,
+          0.007166,
+          0.007167,
+          0.00725,
+          0.007167,
+          0.00725,
+          0.007542,
+          0.007042,
+          0.007042,
+          0.007042,
+          0.006917,
+          0.007208,
+          0.007042,
+          0.006958,
+          0.007041,
+          0.007125,
+          0.007042,
+          0.006917,
+          0.006958,
+          0.007083,
+          0.006959,
+          0.006958,
+          0.007041,
+          0.007,
+          0.007042,
+          0.007,
+          0.006959,
+          0.007,
+          0.007,
+          0.006917,
+          0.007,
+          0.007084,
+          0.006917,
+          0.006958,
+          0.006958,
+          0.007084,
+          0.006958,
+          0.006958,
+          0.007042,
+          0.007125,
+          0.007,
+          0.007,
+          0.006875,
+          0.006958,
+          0.006959,
+          0.006958,
+          0.006916
+        ]
+      ],
+      "median_ms": 0.00725,
+      "p95_ms": 0.00975
+    },
+    "timing_scope": "Python API call including runtime output allocation; prepared inputs, model/session setup and explicit TVM-to-NumPy conversion excluded. ORT returns NumPy arrays directly."
+  }
+}

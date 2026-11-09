@@ -2,6 +2,8 @@
 
 本页记录已有运行，不是跨机器性能结论。原始 JSON 和 TIR 在本地 `runs/`，该目录被 Git 忽略；干净 checkout 需通过下方命令重新生成。结果文件自带 commit、模型或输入 hash、逐次样本和环境。以下各节的运行在不同 commit 和时间进行，不应将不同节的绝对耗时直接合并比较。
 
+另有一套对应 commit `bfe7a2c` 的一键复现原始 JSON 已提交在 [results/reference](../results/reference/README.md)，包括 MLP、CNN、NoFusion 和一个 MatMul 消融；它是另一次独立运行，不与下方既有样本混用。
+
 所有记录均在 Apple M2、macOS 26.5.2 arm64、Python 3.11.15、TVM 0.27.0.post1（其 LLVM 主版本 22）、NumPy 2.4.6 和 ONNX Runtime 1.31.1 上得到。CPU 亲和性、电源策略及其他系统负载未控制；没有实测 cache miss、硬件 SIMD 指令或运行时 kernel 调用数。每组预热 30 次、3 轮每轮 100 次，顺序而非交错计时。性能数字包括 Python 和 VM 调用及输出分配，不包括编译、输入准备及显式输出到 NumPy 的复制；因此仅适用于对应脚本的计时边界。
 
 ## MLP 和 CNN 默认基线
