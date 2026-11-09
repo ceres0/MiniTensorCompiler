@@ -86,6 +86,15 @@ uv run --locked python -m minicompiler run --artifact runs/mlp/artifact --inputs
 
 `evidence` 输出 ONNX 摘要、Relax、实际接入的调度 TIR、VM 字节码及可获取的 LLVM IR/汇编；`compile` 导出内嵌权重的 CPU 工件，`run` 使用 NPZ 输入并验证输入名称、形状和 dtype。完整输入生成、文件来源与平台限制见 [IR 证据链](docs/ir_walkthrough.md)。仅加载可信原生工件；当前没有宣称跨机器或 CUDA 兼容。
 
+## 一键复现与实验记录
+
+```bash
+uv sync --locked --extra dev --extra models
+uv run --locked python -m benchmarks.run_suite --output-dir runs/repro-suite --threads 1
+```
+
+该命令依次生成固定种子的 MLP、CNN，采集 ORT/TVM 对照与 NoFusion 诊断，并运行一个 MatMul 调度消融；结果、参数和日志保存在指定的新目录。各报告中的 Pass 时间由实际编译时的 PassInstrument 采集；嵌套的 inclusive 时间不能直接相加，运行时 kernel 数尚未测量。详见 [架构](docs/architecture.md)、[实验记录](docs/experiments.md) 和 [benchmark 方法](docs/benchmark_methodology.md)。
+
 ## 参考资料
 
 TVM 源码和教程参考固定在 [v0.27.0 tag](https://github.com/apache/tvm/tree/v0.27.0)（release commit `4d0ac16`）。PyPI 的 wheel 版本固定为 `0.27.0.post1`；不能仅凭 tag 假定 post-release wheel 与源码完全一致。后续 API 以安装的 wheel 和其对应源码为准。

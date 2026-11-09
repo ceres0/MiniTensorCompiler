@@ -8,6 +8,10 @@
 
 报告中的 ONNX 加载、检查、形状推断与 Relax 导入是合并计时；TVM 编译单独计时，不包括 Python 启动、VM 初始化、ORT session 创建或推理。主文件 SHA-256 不覆盖外置 ONNX 数据文件；使用外置数据时应另外保存这些文件。报告还记录依赖、目标、模型形状、seed、线程及 Git commit/工作区是否有未提交更改。
 
+报告同时拆分 ONNX 加载检查与 Relax 导入，并在同一次真实编译的 PassContext 内记录 PassInstrument 事件；`inclusive_ms` 包含嵌套 Pass，不能相加，`exclusive_ms` 扣除嵌套 Pass 时间但仍包含回调开销。插桩本身会影响编译耗时；TVM 总 build 时间不是单独的 codegen 时间，无法准确界定的 codegen 和 schedule 时间为 null。Custom 模式先编译 Default 再编译 Custom，因此不能将后者称为严格冷编译；suite 在独立子进程运行每项，但不控制系统缓存。静态 PrimFunc 数来自标注 Pass 后的 IR，不是运行时调用次数；未接 runtime profiler 的 `runtime_kernel_invocations` 为 null。
+
 `default` 是 TVM 0.27.0.post1 的原生 CPU 默认 Relax/TIR 编译流程；`nofusion` 在相同流程中显式禁用 `FuseOps` 和 `FuseTIR`。该版本默认 CPU 流程本身不含这两个 Pass，因此两者可能完全相同，NoFusion 仅供诊断。不要将 ORT 与 TVM 之间的差异称为项目优化收益；后续自定义优化必须与相同配置的 TVM Default 比较。
 
 本项目不自动控制 CPU 亲和性、电源策略或系统负载，报告如实标记为未控制。正式比较需在同一台机器固定这些条件，并确认线程数、模型与输入一致；目前的 macOS 本地运行不代表参考 Linux x86_64 平台已验证。
+
+可选编译缓存尚未实现；报告不包含缓存命中率，也不将热缓存响应时间作为编译加速。

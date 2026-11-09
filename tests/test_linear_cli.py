@@ -72,6 +72,12 @@ def test_custom_benchmark_compares_tvm_default_and_ort(mlp_model, tmp_path):
         assert item["median_ms"] > 0 and item["p95_ms"] > 0
     timing = report["compilation"]
     assert timing["custom_pass_ms"] > 0 and timing["tvm_default_compile_ms"] > 0 and timing["tvm_compile_ms"] > 0
+    assert timing["onnx_load_check_shape_inference_ms"] > 0 and timing["relax_import_ms"] > 0
+    assert timing["pass_timing"]["by_pass"]["LegalizeOps"]["calls"] >= 1
+    assert timing["pass_timing"]["incomplete_passes"] == 0
+    assert timing["codegen_ms"] is None and timing["schedule_ms"] is None
+    assert report["ir_stats"]["tir_primfunc_counts"]
+    assert report["ir_stats"]["runtime_kernel_invocations"] is None
     assert report["inference"]["default_over_custom_speedup"] > 0
     original = report_path.read_bytes()
     repeated = run(*args)

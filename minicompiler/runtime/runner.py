@@ -39,7 +39,7 @@ class TVMRunner:
         return [tensor.numpy() for tensor in result]
 
 
-def build_runner(mod, *, mode="default", target="llvm", onnx_input_names=None):
+def build_runner(mod, *, mode="default", target="llvm", onnx_input_names=None, instruments=None):
     """Compile embedded parameters; map ONNX input names by preserved input order.
 
     TVM's ONNX importer sanitizes names, so callers should supply the ordered
@@ -55,5 +55,5 @@ def build_runner(mod, *, mode="default", target="llvm", onnx_input_names=None):
         if len(onnx_input_names) != len(names) or len(set(onnx_input_names)) != len(names):
             raise ValueError("ONNX runtime inputs must uniquely match Relax parameter count")
         names = onnx_input_names
-    executable, elapsed, pipeline = compile_module(mod, target=target, mode=mode)
+    executable, elapsed, pipeline = compile_module(mod, target=target, mode=mode, instruments=instruments)
     return TVMRunner(executable, names, elapsed, pipeline)

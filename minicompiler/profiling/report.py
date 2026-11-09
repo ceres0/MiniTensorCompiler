@@ -12,6 +12,7 @@ import tvm
 from minicompiler.doctor import collect_report
 from minicompiler.frontend import import_relax, load_and_summarize
 from minicompiler.profiling.benchmark import measure
+from minicompiler.profiling.pass_timing import PassTimer
 from minicompiler.runtime.correctness import compare_outputs, create_ort_runner, make_inputs
 from minicompiler.runtime.runner import build_runner
 
@@ -40,15 +41,19 @@ def run_benchmark(model_path, *, target="llvm", mode="default", threads=1, seed=
     model_path = Path(model_path)
     start = perf_counter_ns()
     model, summary = load_and_summarize(model_path)
+    onnx_check_ms = (perf_counter_ns() - start) / 1e6
+    start = perf_counter_ns()
     mod = import_relax(model, keep_params_in_input=False)
-    import_ms = (perf_counter_ns() - start) / 1e6
+    relax_import_ms = (perf_counter_ns() - start) / 1e6
     input_names = [entry["name"] for entry in summary["inputs"]]
     default_runner = None
     custom_report = None
     custom_pass_ms = None
+    default_timer = None
     if mode == "custom":
         from minicompiler.passes.linear_bias_relu import run_linear_bias_relu
-        default_runner = build_runner(mod, mode="default", target=target, onnx_input_names=input_names)
+        default_timer = PassTimer()
+        default_runner = build_runner(mod, mode="default", target=target, onnx_input_names=input_names, instruments=[default_timer])
         start = perf_counter_ns()
         transformed, custom_report = run_linear_bias_relu(mod)
         custom_pass_ms = (perf_counter_ns() - start) / 1e6
@@ -56,7 +61,9 @@ def run_benchmark(model_path, *, target="llvm", mode="default", threads=1, seed=
             raise RuntimeError(f"linear pass failed: {custom_report['error']}")
     else:
         transformed = mod
-    runner = build_runner(transformed, mode=mode, target=target, onnx_input_names=input_names)
+    timer = PassTimer()
+    runner = build_runner(transformed, mode=mode, target=target, onnx_input_names=input_names, instruments=[timer])
+    pass_timing = timer.snapshot()
     actual_threads = tvm.runtime.num_threads()
     if actual_threads != threads:
         raise RuntimeError(f"TVM runtime reports {actual_threads} threads; requested {threads}. "
@@ -105,9 +112,19 @@ def run_benchmark(model_path, *, target="llvm", mode="default", threads=1, seed=
         "pipeline": runner.pipeline,
         "custom_pass": custom_report,
         "correctness": correctness,
-        "compilation": {"onnx_load_check_shape_inference_and_import_ms": import_ms,
+        "compilation": {"onnx_load_check_shape_inference_and_import_ms": onnx_check_ms + relax_import_ms,
+                        "onnx_load_check_shape_inference_ms": onnx_check_ms,
+                        "relax_import_ms": relax_import_ms,
                         "tvm_compile_ms": runner.compile_time_ms,
                         "custom_pass_ms": custom_pass_ms,
-                        "tvm_default_compile_ms": default_runner.compile_time_ms if default_runner else None},
+                        "tvm_default_compile_ms": default_runner.compile_time_ms if default_runner else None,
+                        "pass_timing": pass_timing,
+                        "default_pass_timing": default_timer.snapshot() if default_timer else None,
+                        "codegen_ms": None,
+                        "schedule_ms": None,
+                        "cold_compile_note": "TVM build elapsed excludes Python startup; process cold state is not verified. In custom mode default is compiled first. Pass instrumentation adds overhead."},
+        "ir_stats": {"tir_primfunc_counts": pass_timing["static_ir_snapshots"],
+                     "runtime_kernel_invocations": None,
+                     "runtime_kernel_invocations_reason": "Not measured by a runtime profiler"},
         "inference": inference,
     }

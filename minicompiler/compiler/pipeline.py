@@ -10,7 +10,7 @@ import time
 import tvm
 
 
-def compile_module(mod, *, target="llvm", mode="default"):
+def compile_module(mod, *, target="llvm", mode="default", instruments=None):
     """Compile an imported Relax module and return executable, milliseconds, metadata."""
     if mode not in ("default", "nofusion", "custom"):
         raise ValueError(f"Unsupported compilation mode: {mode}")
@@ -24,7 +24,7 @@ def compile_module(mod, *, target="llvm", mode="default"):
     else:
         pipeline = "default"
     start = time.perf_counter_ns()
-    with tvm.transform.PassContext(opt_level=2, disabled_pass=disabled):
+    with tvm.transform.PassContext(opt_level=2, disabled_pass=disabled, instruments=instruments or []):
         executable = tvm.compile(mod, target=target_obj, relax_pipeline=pipeline, tir_pipeline="default")
     elapsed_ms = (time.perf_counter_ns() - start) / 1e6
     metadata = {
